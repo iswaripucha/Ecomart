@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoMart - Student Eco Store</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'eco-green': '#22c55e',
+                        'eco-dark': '#16a34a',
+                        'eco-light': '#dcfce7',
+                        'eco-gray': '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .leaf-icon {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .eco-gradient {
+            background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+        }
+    </style>
+</head>
+<body class="bg-eco-gray font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:3001/api';
+
+        // API Service
+        const apiService = {
+            // Auth endpoints
+            login: async (credentials) => {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(credentials)
+                });
+                return response.json();
+            },
+            
+            register: async (userData) => {
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                return response.json();
+            },
+
+            // Products endpoints
+            getProducts: async () => {
+                const response = await fetch(`${API_BASE_URL}/products`);
+                return response.json();
+            },
+
+            createProduct: async (productData, token) => {
+                const response = await fetch(`${API_BASE_URL}/products`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(productData)
+                });
+                return response.json();
+            },
+
+            updateProduct: async (id, productData, token) => {
+                const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(productData)
+                });
+                return response.json();
+            },
+
+            deleteProduct: async (id, token) => {
+                const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                return response.json();
+            },
+
+            // User endpoints
+            getUserProducts: async (token) => {
+                const response = await fetch(`${API_BASE_URL}/users/products`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                return response.json();
+            },
+
+            // Admin endpoints
+            getPendingProducts: async (token) => {
+                const response = await fetch(`${API_BASE_URL}/admin/pending-products`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                return response.json();
+            },
+
+            approveProduct: async (id, token) => {
+                const response = await fetch(`${API_BASE_URL}/admin/products/${id}/approve`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                return response.json();
+            }
+        };
+
+        // Navigation Component
+        const Navigation = ({ user, onLogout }) => (
+            <nav className="bg-white shadow-sm border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-3">
+                            <div className="text-3xl leaf-icon">🌱</div>
+                            <div>
+                                <h1 className="text-xl font-bold text-gray-900">EcoMart</h1>
+                                <p className="text-xs text-gray-500">Student Eco Store</p>
+                            </div>
+                        </div>
+                        {user ? (
+                            <div className="flex items-center space-x-4">
+                                <span className="text-gray-700">Welcome, {user.name}!</span>
+                                <button 
+                                    onClick={onLogout}
+                                    className="text-eco-green hover:text-eco-dark"
+                                >
+                                    Logout
+                                </button>
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+            </nav>
+        );
+
+        // Login Component
+        const LoginForm = ({ onLogin, onSwitchToRegister }) => {
+            const [formData, setFormData] = useState({
+                email: '',
+                password: '',
+                role: 'buyer'
+            });
+            const [loading, setLoading] = useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                try {
+                    const result = await apiService.login(formData);
+                    if (result.success) {
+                        onLogin(result.user, result.token);
+                    } else {
+                        alert(result.message || 'Login failed');
+                    }
+                } catch (error) {
+                    alert('Login failed. Please check your connection.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="max-w-md mx-auto">
+                    <div className="bg-white rounded-2xl card-shadow p-8 mb-8">
+                        <div className="text-center mb-6">
+                            <div className="text-4xl leaf-icon mb-2">🌱</div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to EcoMart</h2>
+                            <p className="text-gray-600">Sustainable shopping for students</p>
+                        </div>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">College Email</label>
+                                <input 
+                                    type="email" 
+                                    placeholder="student@college.edu"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input 
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Login As</label>
+                                <select 
+                                    value={formData.role}
+                                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent"
+                                >
+                                    <option value="buyer">Student Buyer</option>
+                                    <option value="seller">Student Seller</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className="w-full bg-eco-green text-white py-2 rounded-lg hover:bg-eco-dark transition-colors disabled:opacity-50"
+                            >
+                                {loading ? 'Logging in...' : 'Login'}
+                            </button>
+                        </form>
+                        <p className="text-center mt-4 text-sm text-gray-600">
+                            Don't have an account? 
+                            <button 
+                                onClick={onSwitchToRegister}
+                                className="text-eco-green hover:text-eco-dark ml-1"
+                            >
+                                Register here
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            );
+        };
+
+        // Register Component
+        const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
+            const [formData, setFormData] = useState({
+                name: '',
+                email: '',
+                studentId: '',
+                password: '',
+                role: 'buyer'
+            });
+            const [loading, setLoading] = useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                try {
+                    const result = await apiService.register(formData);
+                    if (result.success) {
+                        alert('Registration successful! Please login to continue.');
+                        onSwitchToLogin();
+                    } else {
+                        alert(result.message || 'Registration failed');
+                    }
+                } catch (error) {
+                    alert('Registration failed. Please try again.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="max-w-md mx-auto">
+                    <div className="bg-white rounded-2xl card-shadow p-8 mb-8">
+                        <div className="text-center mb-6">
+                            <div className="text-4xl leaf-icon mb-2">🌱</div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Join EcoMart</h2>
+                            <p className="text-gray-600">Create your student account</p>
+                        </div>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input 
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">College Email</label>
+                                <input 
+                                    type="email" 
+                                    placeholder="student@college.edu"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
+                                <input 
+                                    type="text"
+                                    value={formData.studentId}
+                                    onChange={(e) => setFormData({...formData, studentId: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+                                <select 
+                                    value={formData.role}
+                                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent"
+                                >
+                                    <option value="buyer">Buyer Account</option>
+                                    <option value="seller">Seller Account</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input 
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent"
+                                    required
+                                />
+                            </div>
+                            <button 
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-eco-green text-white py-2 rounded-lg hover:bg-eco-dark transition-colors disabled:opacity-50"
+                            >
+                                {loading ? 'Registering...' : 'Register'}
+                            </button>
+                        </form>
+                        <p className="text-center mt-4 text-sm text-gray-600">
+                            Already have an account? 
+                            <button 
+                                onClick={onSwitchToLogin}
+                                className="text-eco-green hover:text-eco-dark ml-1"
+                            >
+                                Login here
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            );
+        };
+
+        // Product Card Component
+        const ProductCard = ({ product, onViewDetails, onToggleFavorite, isFavorite }) => (
+            <div className="bg-white rounded-2xl card-shadow overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                <div className="h-48 eco-gradient flex items-center justify-center">
+                    <div className="text-6xl">{product.emoji || '📦'}</div>
+                </div>
+                <div className="p-6">
+                    <h4 className="font-semibold text-lg mb-2">{product.title}</h4>
+                    <p className="text-gray-600 text-sm mb-3">{product.description}</p>
+                    <div className="flex justify-between items-center mb-3">
+                        <span className="text-eco-green font-bold text-xl">
+                            {product.price === 0 ? 'Free' : `$${product.price}`}
+                        </span>
+                        <span className="bg-eco-light text-eco-dark px-2 py-1 rounded-full text-xs">
+                            {product.category}
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <p className="text-xs text-gray-500">Posted by: {product.seller_name}</p>
+                        <button 
+                            onClick={() => onToggleFavorite(product.id)}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                            <span className="text-lg">{isFavorite ? '❤️' : '🤍'}</span>
+                        </button>
+                    </div>
+                    <button 
+                        onClick={() => onViewDetails(product)}
+                        className="w-full mt-3 bg-eco-green text-white py-2 rounded-lg hover:bg-eco-dark transition-colors"
+                    >
+                        View Details
+                    </button>
+                </div>
+            </div>
+        );
+
+        // Seller Add Product Form
+        const AddProductForm = ({ onSubmit, loading }) => {
+            const [formData, setFormData] = useState({
+                title: '',
+                description: '',
+                price: '',
+                category: '',
+                condition: '',
+                brand: '',
+                model: '',
+                pickupLocation: '',
+                availability: 'flexible',
+                notes: '',
+                negotiable: 'yes'
+            });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onSubmit(formData);
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto">
+                    <div className="bg-white rounded-2xl card-shadow overflow-hidden">
+                        <div className="bg-gradient-to-r from-eco-green to-eco-dark text-white p-6">
+                            <h3 className="text-2xl font-bold flex items-center">
+                                <span className="mr-3">📚</span>
+                                Sell Your Item
+                            </h3>
+                            <p className="mt-2 opacity-90">Fill out the details below to list your item for sale</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="p-8">
+                            {/* Basic Information */}
+                            <div className="mb-8">
+                                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                    <span className="mr-2">📝</span>
+                                    Basic Information
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Product Title *</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="e.g., Calculus: Early Transcendentals 8th Edition"
+                                            value={formData.title}
+                                            onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                            required
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                                        <select 
+                                            value={formData.category}
+                                            onChange={(e) => setFormData({...formData, category: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                            required
+                                        >
+                                            <option value="">Select Category</option>
+                                            <option value="textbooks">📚 Textbooks</option>
+                                            <option value="novels">📖 Novels & Fiction</option>
+                                            <option value="electronics">💻 Electronics</option>
+                                            <option value="furniture">🪑 Furniture</option>
+                                            <option value="stationery">✏️ Stationery</option>
+                                            <option value="clothing">👕 Clothing</option>
+                                            <option value="sports">⚽ Sports Equipment</option>
+                                            <option value="others">📦 Others</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Condition *</label>
+                                        <select 
+                                            value={formData.condition}
+                                            onChange={(e) => setFormData({...formData, condition: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                            required
+                                        >
+                                            <option value="">Select Condition</option>
+                                            <option value="new">🆕 Brand New</option>
+                                            <option value="like-new">✨ Like New</option>
+                                            <option value="excellent">👍 Excellent</option>
+                                            <option value="good">👌 Good</option>
+                                            <option value="fair">⚠️ Fair</option>
+                                            <option value="poor">❌ Poor</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Pricing */}
+                            <div className="mb-8">
+                                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                    <span className="mr-2">💰</span>
+                                    Pricing & Availability
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Price *</label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-3 text-gray-500">$</span>
+                                            <input 
+                                                type="number" 
+                                                placeholder="0.00"
+                                                value={formData.price}
+                                                onChange={(e) => setFormData({...formData, price: e.target.value})}
+                                                className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Negotiable</label>
+                                        <select 
+                                            value={formData.negotiable}
+                                            onChange={(e) => setFormData({...formData, negotiable: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                        >
+                                            <option value="yes">💬 Yes, price negotiable</option>
+                                            <option value="no">🔒 Fixed price</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Description */}
+                            <div className="mb-8">
+                                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                    <span className="mr-2">📄</span>
+                                    Description & Details
+                                </h4>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                                        <textarea 
+                                            rows="5" 
+                                            placeholder="Describe your item in detail..."
+                                            value={formData.description}
+                                            onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                            required
+                                        />
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Brand/Publisher</label>
+                                            <input 
+                                                type="text" 
+                                                placeholder="e.g., Pearson, Apple, IKEA"
+                                                value={formData.brand}
+                                                onChange={(e) => setFormData({...formData, brand: e.target.value})}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Model/Edition</label>
+                                            <input 
+                                                type="text" 
+                                                placeholder="e.g., 8th Edition, Model A1234"
+                                                value={formData.model}
+                                                onChange={(e) => setFormData({...formData, model: e.target.value})}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact & Delivery */}
+                            <div className="mb-8">
+                                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                    <span className="mr-2">📍</span>
+                                    Pickup & Contact
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Location *</label>
+                                        <select 
+                                            value={formData.pickupLocation}
+                                            onChange={(e) => setFormData({...formData, pickupLocation: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                            required
+                                        >
+                                            <option value="">Select Location</option>
+                                            <option value="library">📚 Main Library</option>
+                                            <option value="student-center">🏢 Student Center</option>
+                                            <option value="dorm-area">🏠 Dorm Area</option>
+                                            <option value="cafeteria">🍽️ Cafeteria</option>
+                                            <option value="parking">🚗 Parking Lot</option>
+                                            <option value="other">📍 Other</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+                                        <select 
+                                            value={formData.availability}
+                                            onChange={(e) => setFormData({...formData, availability: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                        >
+                                            <option value="flexible">🕐 Flexible timing</option>
+                                            <option value="weekdays">📅 Weekdays only</option>
+                                            <option value="weekends">🎯 Weekends only</option>
+                                            <option value="evenings">🌙 Evenings only</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                                    <textarea 
+                                        rows="2" 
+                                        placeholder="Any special instructions for pickup, preferred contact method, etc."
+                                        value={formData.notes}
+                                        onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent bg-white"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Submit */}
+                            <div className="border-t border-gray-200 pt-6">
+                                <button 
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-eco-green text-white py-3 px-6 rounded-lg hover:bg-eco-dark transition-colors font-medium disabled:opacity-50"
+                                >
+                                    {loading ? 'Submitting...' : '🚀 Submit for Review'}
+                                </button>
+                                
+                                <p className="text-xs text-gray-500 text-center mt-4">
+                                    Your listing will be reviewed within 24 hours and you'll be notified via email once it's live.
+                                </p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // Main App Component
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [token, setToken] = useState(localStorage.getItem('token'));
+            const [currentView, setCurrentView] = useState('login');
+            const [showRegister, setShowRegister] = useState(false);
+            const [products, setProducts] = useState([]);
+            const [userProducts, setUserProducts] = useState([]);
+            const [favorites, setFavorites] = useState([]);
+            const [loading, setLoading] = useState(false);
+
+            // Load user data on mount if token exists
+            useEffect(() => {
+                if (token) {
+                    // Verify token and load user data
+                    const userData = localStorage.getItem('user');
+                    if (userData) {
+                        setUser(JSON.parse(userData));
+                        setCurrentView(JSON.parse(userData).role === 'admin' ? 'admin' : 
+                                     JSON.parse(userData).role === 'seller' ? 'seller' : 'buyer');
+                    }
+                }
+            }, [token]);
+
+            // Load products
+            useEffect(() => {
+                if (user) {
+                    loadProducts();
+                    if (user.role === 'seller') {
+                        loadUserProducts();
+                    }
+                }
+            }, [user]);
+
+            const loadProducts = async () => {
+                try {
+                    const result = await apiService.getProducts();
+                    if (result.success) {
+                        setProducts(result.products);
+                    }
+                } catch (error) {
+                    console.error('Failed to load products:', error);
+                }
+            };
+
+            const loadUserProducts = async () => {
+                try {
+                    const result = await apiService.getUserProducts(token);
+                    if (result.success) {
+                        setUserProducts(result.products);
+                    }
+                } catch (error) {
+                    console.error('Failed to load user products:', error);
+                }
+            };
+
+            const handleLogin = (userData, authToken) => {
+                setUser(userData);
+                setToken(authToken);
+                localStorage.setItem('token', authToken);
+                localStorage.setItem('user', JSON.stringify(userData));
+                setCurrentView(userData.role === 'admin' ? 'admin' : 
+                             userData.role === 'seller' ? 'seller' : 'buyer');
+            };
+
+            const handleLogout = () => {
+                setUser(null);
+                setToken(null);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                setCurrentView('login');
+                setShowRegister(false);
+            };
+
+            const handleAddProduct = async (productData) => {
+                setLoading(true);
+                try {
+                    const result = await apiService.createProduct(productData, token);
+                    if (result.success) {
+                        alert('Product submitted for review! 🌱');
+                        loadUserProducts();
+                        setCurrentView('seller');
+                    } else {
+                        alert(result.message || 'Failed to add product');
+                    }
+                } catch (error) {
+                    alert('Failed to add product. Please try again.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const toggleFavorite = (productId) => {
+                setFavorites(prev => 
+                    prev.includes(productId) 
+                        ? prev.filter(id => id !== productId)
+                        : [...prev, productId]
+                );
+            };
+
+            // Render different views based on current state
+            if (!user) {
+                return (
+                    <div className="min-h-screen bg-eco-gray">
+                        <Navigation user={user} onLogout={handleLogout} />
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                            {showRegister ? (
+                                <RegisterForm 
+                                    onRegister={() => {}}
+                                    onSwitchToLogin={() => setShowRegister(false)}
+                                />
+                            ) : (
+                                <LoginForm 
+                                    onLogin={handleLogin}
+                                    onSwitchToRegister={() => setShowRegister(true)}
+                                />
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-eco-gray">
+                    <Navigation user={user} onLogout={handleLogout} />
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        
+                        {/* Buyer Dashboard */}
+                        {currentView === 'buyer' && (
+                            <div>
+                                <div className="flex justify-between items-center mb-8">
+                                    <div>
+                                        <h2 className="text-3xl font-bold text-gray-900">Buyer Dashboard</h2>
+                                        <p className="text-gray-600">Find sustainable items from fellow students</p>
+                                    </div>
+                                </div>
+
+                                {/* Search & Filter */}
+                                <div className="bg-white rounded-2xl card-shadow p-6 mb-8">
+                                    <div className="flex flex-col md:flex-row gap-4">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search for items..." 
+                                            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent"
+                                        />
+                                        <select className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eco-green focus:border-transparent">
+                                            <option>All Categories</option>
+                                            <option>Books</option>
+                                            <option>Electronics</option>
+                                            <option>Furniture</option>
+                                        </select>
+                                        <button className="bg-eco-green text-white px-6 py-3 rounded-lg hover:bg-eco-dark transition-colors">
+                                            Search
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Products Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {products.map(product => (
+                                        <ProductCard 
+                                            key={product.id}
+                                            product={product}
+                                            onViewDetails={() => {}}
+                                            onToggleFavorite={toggleFavorite}
+                                            isFavorite={favorites.includes(product.id)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Seller Dashboard */}
+                        {currentView === 'seller' && (
+                            <div>
+                                <div className="bg-white rounded-2xl card-shadow mb-8">
+                                    <div className="flex flex-wrap items-center justify-between p-6">
+                                        <div>
+                                            <h2 className="text-3xl font-bold text-gray-900">Seller Dashboard</h2>
+                                            <p className="text-gray-600">Manage your listings and sales</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+                                            <button 
+                                                onClick={() => setCurrentView('seller')}
+                                                className="bg-eco-green text-white px-4 py-2 rounded-lg hover:bg-eco-dark transition-colors flex items-center space-x-2"
+                                            >
+                                                <span>🏠</span>
+                                                <span>Home</span>
+                                            </button>
+                                            <button 
+                                                onClick={() => setCurrentView('add-product')}
+                                                className="border border-eco-green text-eco-green px-4 py-2 rounded-lg hover:bg-eco-light transition-colors flex items-center space-x-2"
+                                            >
+                                                <span>➕</span>
+                                                <span>Add Product</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Stats */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                    <div className="bg-white rounded-2xl card-shadow p-6 text-center">
+                                        <div className="text-3xl mb-2">📦</div>
+                                        <h3 className="text-2xl font-bold text-eco-green">{userProducts.length}</h3>
+                                        <p className="text-gray-600">Active Listings</p>
+                                    </div>
+                                    <div className="bg-white rounded-2xl card-shadow p-6 text-center">
+                                        <div className="text-3xl mb-2">✅</div>
+                                        <h3 className="text-2xl font-bold text-eco-green">0</h3>
+                                        <p className="text-gray-600">Items Sold</p>
+                                    </div>
+                                    <div className="bg-white rounded-2xl card-shadow p-6 text-center">
+                                        <div className="text-3xl mb-2">💰</div>
+                                        <h3 className="text-2xl font-bold text-eco-green">$0</h3>
+                                        <p className="text-gray-600">Total Earnings</p>
+                                    </div>
+                                </div>
+
+                                {/* My Listings */}
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4">My Listings</h3>
+                                    <div className="bg-white rounded-2xl card-shadow">
+                                        {userProducts.length === 0 ? (
+                                            <div className="p-8 text-center text-gray-500">
+                                                <div className="text-4xl mb-4">📦</div>
+                                                <p>No products listed yet. Click "Add Product" to get started!</p>
+                                            </div>
+                                        ) : (
+                                            <div className="divide-y divide-gray-200">
+                                                {userProducts.map(product => (
+                                                    <div key={product.id} className="p-4 flex items-center space-x-4">
+                                                        <div className="w-16 h-16 eco-gradient rounded-lg flex items-center justify-center">
+                                                            <span className="text-2xl">{product.emoji || '📦'}</span>
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h4 className="font-medium">{product.title}</h4>
+                                                            <p className="text-gray-600 text-sm">
+                                                                Posted {new Date(product.created_at).toLocaleDateString()}
+                                                            </p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="font-bold text-eco-green">
+                                                                {product.price === 0 ? 'Free' : `$${product.price}`}
+                                                            </p>
+                                                            <span className={`px-2 py-1 rounded-full text-xs ${
+                                                                product.status === 'approved' 
+                                                                    ? 'bg-green-100 text-green-800' 
+                                                                    : 'bg-yellow-100 text-yellow-800'
+                                                            }`}>
+                                                                {product.status === 'approved' ? 'Active' : 'Pending'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Add Product Form */}
+                        {currentView === 'add-product' && (
+                            <div>
+                                <div className="flex items-center mb-6">
+                                    <button 
+                                        onClick={() => setCurrentView('seller')}
+                                        className="text-eco-green hover:text-eco-dark mr-4"
+                                    >
+                                        ← Back
+                                    </button>
+                                    <h2 className="text-3xl font-bold text-gray-900">Add New Product</h2>
+                                </div>
+                                <AddProductForm onSubmit={handleAddProduct} loading={loading} />
+                            </div>
+                        )}
+
+                        {/* Admin Dashboard */}
+                        {currentView === 'admin' && (
+                            <div>
+                                <div className="flex justify-between items-center mb-8">
+                                    <div>
+                                        <h2 className="text-3xl font-bold text-gray-900">Admin Dashboard</h2>
+                                        <p className="text-gray-600">Manage platform operations</p>
+                                    </div>
+                                </div>
+
+                                {/* Admin Stats */}
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                                    <div className="bg-white rounded-2xl card-shadow p-6 text-center">
+                                        <div className="text-3xl mb-2">👥</div>
+                                        <h3 className="text-2xl font-bold text-eco-green">0</h3>
+                                        <p className="text-gray-600">Total Users</p>
+                                    </div>
+                                    <div className="bg-white rounded-2xl card-shadow p-6 text-center">
+                                        <div className="text-3xl mb-2">📦</div>
+                                        <h3 className="text-2xl font-bold text-eco-green">{products.length}</h3>
+                                        <p className="text-gray-600">Active Items</p>
+                                    </div>
+                                    <div className="bg-white rounded-2xl card-shadow p-6 text-center">
+                                        <div className="text-3xl mb-2">⏳</div>
+                                        <h3 className="text-2xl font-bold text-orange-500">0</h3>
+                                        <p className="text-gray-600">Pending Approval</p>
+                                    </div>
+                                    <div className="bg-white rounded-2xl card-shadow p-6 text-center">
+                                        <div className="text-3xl mb-2">📊</div>
+                                        <h3 className="text-2xl font-bold text-eco-green">0</h3>
+                                        <p className="text-gray-600">Total Transactions</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-2xl card-shadow p-6">
+                                    <h3 className="text-xl font-semibold mb-4">Recent Activity</h3>
+                                    <p className="text-gray-500">No recent activity to display.</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+
+    <!-- Backend API Documentation -->
+    <script type="text/plain" id="backend-setup">
+        /*
+        BACKEND SETUP INSTRUCTIONS:
+        
+        1. Initialize Node.js project:
+           npm init -y
+           
+        2. Install dependencies:
+           npm install express mysql2 bcryptjs jsonwebtoken cors dotenv multer
+           npm install --save-dev nodemon
+           
+        3. Create server.js:
+        */
+        
+        const express = require('express');
+        const mysql = require('mysql2/promise');
+        const bcrypt = require('bcryptjs');
+        const jwt = require('jsonwebtoken');
+        const cors = require('cors');
+        require('dotenv').config();
+        
+        const app = express();
+        const PORT = process.env.PORT || 3001;
+        
+        // Middleware
+        app.use(cors());
+        app.use(express.json());
+        
+        // Database connection
+        const dbConfig = {
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || '',
+            database: process.env.DB_NAME || 'ecomart'
+        };
+        
+        // Create database connection
+        let db;
+        async function initDB() {
+            try {
+                db = await mysql.createConnection(dbConfig);
+                console.log('Connected to MySQL database');
+                
+                // Create tables if they don't exist
+                await createTables();
+            } catch (error) {
+                console.error('Database connection failed:', error);
+            }
+        }
+        
+        // Create database tables
+        async function createTables() {
+            const createUsersTable = `
+                CREATE TABLE IF NOT EXISTS users (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    email VARCHAR(255) UNIQUE NOT NULL,
+                    student_id VARCHAR(100) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    role ENUM('buyer', 'seller', 'admin') DEFAULT 'buyer',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `;
+            
+            const createProductsTable = `
+                CREATE TABLE IF NOT EXISTS products (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    seller_id INT NOT NULL,
+                    title VARCHAR(255) NOT NULL,
+                    description TEXT NOT NULL,
+                    price DECIMAL(10, 2) NOT NULL,
+                    category VARCHAR(100) NOT NULL,
+                    condition_status VARCHAR(50) NOT NULL,
+                    brand VARCHAR(100),
+                    model VARCHAR(100),
+                    pickup_location VARCHAR(100) NOT NULL,
+                    availability VARCHAR(50) DEFAULT 'flexible',
+                    notes TEXT,
+                    negotiable BOOLEAN DEFAULT true,
+                    status ENUM('pending', 'approved', 'rejected', 'sold') DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            `;
+            
+            const createMessagesTable = `
+                CREATE TABLE IF NOT EXISTS messages (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    product_id INT NOT NULL,
+                    buyer_id INT NOT NULL,
+                    seller_id INT NOT NULL,
+                    message TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+                    FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            `;
+            
+            await db.execute(createUsersTable);
+            await db.execute(createProductsTable);
+            await db.execute(createMessagesTable);
+            
+            console.log('Database tables created successfully');
+        }
+        
+        // Middleware to verify JWT token
+        const authenticateToken = (req, res, next) => {
+            const authHeader = req.headers['authorization'];
+            const token = authHeader && authHeader.split(' ')[1];
+            
+            if (!token) {
+                return res.status(401).json({ success: false, message: 'Access token required' });
+            }
+            
+            jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+                if (err) {
+                    return res.status(403).json({ success: false, message: 'Invalid token' });
+                }
+                req.user = user;
+                next();
+            });
+        };
+        
+        // Auth Routes
+        app.post('/api/auth/register', async (req, res) => {
+            try {
+                const { name, email, studentId, password, role } = req.body;
+                
+                // Check if user already exists
+                const [existingUsers] = await db.execute(
+                    'SELECT * FROM users WHERE email = ? OR student_id = ?',
+                    [email, studentId]
+                );
+                
+                if (existingUsers.length > 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'User with this email or student ID already exists'
+                    });
+                }
+                
+                // Hash password
+                const hashedPassword = await bcrypt.hash(password, 10);
+                
+                // Insert new user
+                const [result] = await db.execute(
+                    'INSERT INTO users (name, email, student_id, password, role) VALUES (?, ?, ?, ?, ?)',
+                    [name, email, studentId, hashedPassword, role]
+                );
+                
+                res.status(201).json({
+                    success: true,
+                    message: 'User registered successfully',
+                    userId: result.insertId
+                });
+            } catch (error) {
+                console.error('Registration error:', error);
+                res.status(500).json({ success: false, message: 'Registration failed' });
+            }
+        });
+        
+        app.post('/api/auth/login', async (req, res) => {
+            try {
+                const { email, password, role } = req.body;
+                
+                // Find user
+                const [users] = await db.execute(
+                    'SELECT * FROM users WHERE email = ? AND role = ?',
+                    [email, role]
+                );
+                
+                if (users.length === 0) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'Invalid credentials'
+                    });
+                }
+                
+                const user = users[0];
+                
+                // Verify password
+                const isValidPassword = await bcrypt.compare(password, user.password);
+                if (!isValidPassword) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'Invalid credentials'
+                    });
+                }
+                
+                // Generate JWT token
+                const token = jwt.sign(
+                    { userId: user.id, email: user.email, role: user.role },
+                    process.env.JWT_SECRET || 'your-secret-key',
+                    { expiresIn: '24h' }
+                );
+                
+                res.json({
+                    success: true,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role
+                    },
+                    token
+                });
+            } catch (error) {
+                console.error('Login error:', error);
+                res.status(500).json({ success: false, message: 'Login failed' });
+            }
+        });
+        
+        // Product Routes
+        app.get('/api/products', async (req, res) => {
+            try {
+                const [products] = await db.execute(`
+                    SELECT p.*, u.name as seller_name 
+                    FROM products p 
+                    JOIN users u ON p.seller_id = u.id 
+                    WHERE p.status = 'approved'
+                    ORDER BY p.created_at DESC
+                `);
+                
+                res.json({ success: true, products });
+            } catch (error) {
+                console.error('Get products error:', error);
+                res.status(500).json({ success: false, message: 'Failed to fetch products' });
+            }
+        });
+        
+        app.post('/api/products', authenticateToken, async (req, res) => {
+            try {
+                const {
+                    title, description, price, category, condition, brand, model,
+                    pickupLocation, availability, notes, negotiable
+                } = req.body;
+                
+                const [result] = await db.execute(`
+                    INSERT INTO products (
+                        seller_id, title, description, price, category, condition_status,
+                        brand, model, pickup_location, availability, notes, negotiable
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, [
+                    req.user.userId, title, description, price, category, condition,
+                    brand, model, pickupLocation, availability, notes, negotiable === 'yes'
+                ]);
+                
+                res.status(201).json({
+                    success: true,
+                    message: 'Product created successfully',
+                    productId: result.insertId
+                });
+            } catch (error) {
+                console.error('Create product error:', error);
+                res.status(500).json({ success: false, message: 'Failed to create product' });
+            }
+        });
+        
+        app.get('/api/users/products', authenticateToken, async (req, res) => {
+            try {
+                const [products] = await db.execute(
+                    'SELECT * FROM products WHERE seller_id = ? ORDER BY created_at DESC',
+                    [req.user.userId]
+                );
+                
+                res.json({ success: true, products });
+            } catch (error) {
+                console.error('Get user products error:', error);
+                res.status(500).json({ success: false, message: 'Failed to fetch user products' });
+            }
+        });
+        
+        // Admin Routes
+        app.get('/api/admin/pending-products', authenticateToken, async (req, res) => {
+            try {
+                if (req.user.role !== 'admin') {
+                    return res.status(403).json({ success: false, message: 'Admin access required' });
+                }
+                
+                const [products] = await db.execute(`
+                    SELECT p.*, u.name as seller_name 
+                    FROM products p 
+                    JOIN users u ON p.seller_id = u.id 
+                    WHERE p.status = 'pending'
+                    ORDER BY p.created_at DESC
+                `);
+                
+                res.json({ success: true, products });
+            } catch (error) {
+                console.error('Get pending products error:', error);
+                res.status(500).json({ success: false, message: 'Failed to fetch pending products' });
+            }
+        });
+        
+        app.put('/api/admin/products/:id/approve', authenticateToken, async (req, res) => {
+            try {
+                if (req.user.role !== 'admin') {
+                    return res.status(403).json({ success: false, message: 'Admin access required' });
+                }
+                
+                await db.execute(
+                    'UPDATE products SET status = ? WHERE id = ?',
+                    ['approved', req.params.id]
+                );
+                
+                res.json({ success: true, message: 'Product approved successfully' });
+            } catch (error) {
+                console.error('Approve product error:', error);
+                res.status(500).json({ success: false, message: 'Failed to approve product' });
+            }
+        });
+        
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+            initDB();
+        });
+        
+        /*
+        4. Create .env file:
+        DB_HOST=localhost
+        DB_USER=root
+        DB_PASSWORD=your_password
+        DB_NAME=ecomart
+        JWT_SECRET=your-secret-key
+        
+        5. Create package.json scripts:
+        "scripts": {
+            "start": "node server.js",
+            "dev": "nodemon server.js"
+        }
+        
+        6. MySQL Database Setup:
+        CREATE DATABASE ecomart;
+        
+        7. Run the server:
+        npm run dev
+        */
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97bf5c42529e4850',t:'MTc1NzM0NDA5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
