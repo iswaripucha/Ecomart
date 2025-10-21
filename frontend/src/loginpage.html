@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoMart - Login</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url("campus-3.jpg") no-repeat center center/cover;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-box {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      width: 350px;
+      text-align: center;
+    }
+
+    .login-box h1 {
+      margin: 0;
+      font-size: 22px;
+      color: #2e7d32;
+    }
+
+    .login-box p {
+      margin: 5px 0 20px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .login-box input,
+    .login-box select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .login-box button:hover {
+      background: #1b5e20;
+    }
+
+    .signup-text {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .signup-text a {
+      color: #2e7d32;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .signup-text a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h1>Welcome to EcoMart</h1>
+    <p>Sustainable shopping for students</p>
+
+    <form id="loginForm">
+      <!-- UserID -->
+      <input type="text" id="userid" placeholder="Enter your ID" required>
+      
+      <!-- Password -->
+      <input type="password" id="password" placeholder="Enter your password" required>
+      
+      <!-- Role -->
+      <select id="role" required>
+        <option value="buyer">Buyer</option>
+        <option value="seller">Seller</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <!-- Button -->
+      <button type="submit">Login</button>
+    </form>
+
+    <!-- Signup text -->
+    <p class="signup-text">
+      Don’t have an account? <a href="register.html">Register here</a>
+    </p>
+  </div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const userid = document.getElementById('userid').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const role = document.getElementById('role').value;
+
+    if (!userid || !password) {
+        alert("Please fill all fields.");
+        return;
+    }
+
+    try {
+        const res = await fetch('http://localhost:3000/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userid, password, role })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        // Success
+        alert(data.message);
+
+        // Redirect based on role returned from backend
+        switch(data.role) {
+            case 'buyer':
+                window.location.href = "buyer.html";
+                break;
+            case 'seller':
+                window.location.href = "seller.html";
+                break;
+            case 'admin':
+                window.location.href = "admin.html";
+                break;
+            default:
+                alert("Unknown user role.");
+        }
+
+    } catch (err) {
+        console.error("Login error:", err);
+        alert("Unable to connect to server. Make sure your backend is running.");
+    }
+});
+</script>
+</body>
+</html>

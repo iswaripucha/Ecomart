@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell Now! - EcoMart</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+     <div id="policy-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>EcoMart Selling Policies</h2>
+            <p class="modal-intro">Please read the following policies carefully before listing your items on EcoMart.</p>
+
+            <div class="policy-section alert-section">
+    <div class="alert-box warning" style="border-left: 5px solid #e74c3c; background-color: #fdecea; padding: 20px; border-radius: 8px; position: relative;">
+        <i class="fas fa-exclamation-triangle" style="color: #e74c3c; font-size: 24px; vertical-align: middle; margin-right: 10px;"></i>
+        <strong style="font-size: 18px; color: #c0392b;">Important Alert!</strong>
+        <span class="close-btn" onclick="this.parentElement.style.display='none';" 
+              style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 20px; color: #c0392b;">&times;</span>
+        <p style="margin-top: 10px; font-size: 16px; line-height: 1.5; color: #2c3e50;">
+            All items listed must be <b>owned by the seller</b> and in <b>good, usable condition</b>.  
+            Any violation of these rules may lead to <b>removal of the listing, temporary suspension, or a fine up to 10% of the item’s price</b>.
+        </p>
+    </div>
+</div>
+
+            <div class="policy-section">
+                <h3>Promote Sustainability!</h3>
+                <div class="info-box">
+                    <p>EcoMart encourages students to reuse and recycle items within the campus. Instead of discarding items, list them to sell or donate to fellow students, reducing waste and promoting eco-friendly habits.</p>
+                </div>
+            </div> 
+
+            <div class="policy-section">
+                <h3>Sell Your Items & Help Fellow Students! ♻️</h3>
+                <p>Have unused or gently used items like books, gadgets, or clothing? Post them on EcoMart to earn money or donate. EcoMart makes selling simple, safe, and convenient.</p>
+            </div>
+
+            <div class="policy-section">
+                <h3>Pricing Guidelines</h3>
+                <ul>
+                    <li><i class="fas fa-check-circle success"></i> Price your items fairly and transparently to ensure smooth transactions.</li>
+                    <li><i class="fas fa-check-circle success"></i> Donations are welcomed for items you no longer need.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h3>Why Sell on EcoMart?</h3>
+                <ul>
+                    <li><i class="fas fa-check-circle success"></i> Support Sustainability – Reduce campus waste and reuse items.</li>
+                    <li><i class="fas fa-check-circle success"></i> Easy Process – Simple form to list items quickly.</li>
+                    <li><i class="fas fa-check-circle success"></i> Community Engagement – Help other students access affordable items.</li>
+                    <li><i class="fas fa-check-circle success"></i> Secure Platform – Only verified college students can list and buy items.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h3>How It Works?</h3>
+                <ul>
+                    <li><i class="fas fa-check-circle success"></i> Fill the Form – Provide item details, photos, and price.</li>
+                    <li><i class="fas fa-check-circle success"></i> Get Connected – Buyers can contact you through EcoMart.</li>
+                    <li><i class="fas fa-check-circle success"></i> Donate Option – Mark items for donation if you don’t want to sell.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h3>Items Not Allowed</h3>
+                <p>Do not list the following items:</p>
+                <ul>
+                    <li><i class="fas fa-times-circle danger"></i> Hazardous or illegal items</li>
+                    <li><i class="fas fa-times-circle danger"></i> Expired or perishable goods</li>
+                    <li><i class="fas fa-times-circle danger"></i> Offensive or inappropriate materials</li>
+                    <li><i class="fas fa-times-circle danger"></i> Broken or unusable items</li>
+                    <li><i class="fas fa-times-circle danger"></i> Items violating college rules or policies</li>
+                </ul>
+            </div>
+
+            <div class="policy-section text-center">
+                <p class="call-to-action">List your items today, earn money, or donate, and help make your campus more sustainable! ♻️</p>
+            </div>
+
+            <div class="modal-footer">
+                <label class="policy-ack">
+                    <input type="checkbox" id="acknowledge-policy">
+                    I have read and understood the policies.
+                </label>
+                <button id="proceed-btn" class="modal-button" disabled>Proceed to Form</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-page-content" class="hidden">
+        <div class="main-banner">
+            <h1>SELL NOW!</h1>
+        </div>
+
+        <div class="form-container">
+            <h1>Post to EcoMart</h1>
+            <p>Fill out the form below to sell or donate an item within your campus community.</p>
+
+            <form id="product-form">
+                <div class="form-group">
+                    <label for="category-select">Category</label>
+                    <select id="category-select" name="category" required>
+                        <option value="" disabled selected>Select a category...</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="books">Books & Notes</option>
+                        <option value="furniture">Furniture</option>
+                        <option value="clothing">Clothing & Accessories</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="item-type-select">Item Type</label>
+                    <select id="item-type-select" name="item-type" required>
+                        <option value="" disabled selected>First select a category...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="listing-title">Listing Title</label>
+                    <input type="text" id="listing-title" name="title" placeholder="e.g., Gently Used Lab Coat" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" placeholder="Describe your item in detail..."></textarea>
+                </div>
+
+                <div class="form-group" id="condition-field-wrapper">
+                    <label for="condition-field">Condition</label>
+                    <select id="condition-field" name="condition">
+                        <option value="new">New</option>
+                        <option value="like-new">Like New</option>
+                        <option value="good">Good</option>
+                        <option value="used">Used</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="photo-field-wrapper">
+                    <label for="photo-field">Upload Photo</label>
+                    <input type="file" id="photo-field" name="photo" accept="image/*">
+                </div>
+
+                <div class="form-group" id="video-field-wrapper">
+                    <label for="video-field">Upload Video</label>
+                    <input type="file" id="video-field" name="video" accept="video/*">
+                </div>
+
+                <div class="form-group">
+                    <label for="price-field" id="price-label">Price (INR)</label>
+                    <input type="number" id="price-field" name="price" placeholder="0" min="0" step="10" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="location-select">Location</label>
+                    <select id="location-select" name="location" required>
+                        <option value="" disabled selected>Select a campus location...</option>
+                        <option value="campus-library">Campus Library</option>
+                        <option value="student-union">Student Union</option>
+                        <option value="engineering-hall">Engineering Hall</option>
+                        <option value="arts-building">Arts Building</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="submit-btn">Post to EcoMart</button>
+            </form>
+        </div>
+    </div>
+<section class="product-grid" id="seller-product-list">
+    <!-- Products added here dynamically -->
+</section>
+    <script src="script.js"></script>
+</body>
+</html>

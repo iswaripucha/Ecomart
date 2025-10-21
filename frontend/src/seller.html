@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoMart - Seller Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">EcoMart</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="logout.html">Logout</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="seller-dashboard-section">
+      <h1>Seller's Dashboard</h1>
+
+<br>
+
+      <form id="add-product-form" class="add-product-form">
+  <button type="button" id="add-product-btn">Add Product</button>
+</form>
+
+
+
+      <h2>Your Listed Products</h2>
+      <section class="product-grid" id="seller-product-list">
+        <!-- Seller products load dynamically -->
+        <!-- No buttons displayed -->
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 EcoMart. All Rights Reserved.</p>
+  </footer>
+<script>
+  // script.js in seller page
+const form = document.getElementById("product-form"); // Your seller form
+
+form.addEventListener("submit", function(e){
+    e.preventDefault();
+
+    // Get product data from form
+    const product = {
+        title: document.getElementById("listing-title").value,
+        category: document.getElementById("category-select").value,
+        condition: document.getElementById("condition-field").value,
+        price: document.getElementById("price-field").value,
+        location: document.getElementById("location-select").value,
+        description: document.getElementById("description").value,
+        photo: document.getElementById("photo-field").files[0] ? URL.createObjectURL(document.getElementById("photo-field").files[0]) : "https://via.placeholder.com/200x150"
+    };
+
+    // Get existing products from localStorage or initialize empty array
+    let products = JSON.parse(localStorage.getItem("products")) || [];
+
+    // Add new product
+    products.push(product);
+
+    // Save back to localStorage
+    localStorage.setItem("products", JSON.stringify(products));
+
+    alert("Product added successfully!");
+    form.reset();
+});
+
+</script>
+  <script src="script.js"></script>
+</body>
+</html>

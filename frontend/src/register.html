@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoMart - Register</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url("campus-3.jpg") no-repeat center center/cover;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .register-box {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      width: 350px;
+      text-align: center;
+    }
+
+    .register-box h1 {
+      margin: 0;
+      font-size: 22px;
+      color: #2e7d32;
+    }
+
+    .register-box p {
+      margin: 5px 0 20px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .register-box input,
+    .register-box select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .register-box button {
+      width: 100%;
+      padding: 10px;
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .register-box button:hover {
+      background: #1b5e20;
+    }
+
+    .login-text {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .login-text a {
+      color: #2e7d32;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .login-text a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-box">
+    <h1>Create Your Account</h1>
+    <p>Sustainable shopping for students</p>
+
+    <form id="registerForm">
+      <!-- Name -->
+      <input type="text" id="name" placeholder="Enter your full name" required>
+
+      <!-- Email -->
+      <input type="email" id="email" placeholder="Enter your college email" required>
+
+      <!-- Password -->
+      <input type="password" id="password" placeholder="Enter your password" required>
+
+      <!-- Confirm Password -->
+      <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+
+      <!-- Role -->
+      <select id="role" required>
+        <option value="buyer">Buyer</option>
+        <option value="seller">Seller</option>
+      </select>
+
+      <!-- Button -->
+      <button type="submit">Register</button>
+    </form>
+
+    <!-- Login text -->
+    <p class="login-text">
+      Already Registered? <a href="loginpage.html">Login here</a>
+    </p>
+  </div>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      let name = document.getElementById("name").value.trim();
+      let email = document.getElementById("email").value.trim();
+      let password = document.getElementById("password").value;
+      let confirmPassword = document.getElementById("confirmPassword").value;
+      let role = document.getElementById("role").value;
+
+      // Email validation: must end with .student.mes.ac.in
+      const emailPattern = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.)?student\.mes\.ac\.in$/;
+      if (!emailPattern.test(email)) {
+        alert("Please enter a valid college email ending with .student.mes.ac.in");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:3000/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password, role })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+
+        // Show assigned role-based UserID
+        alert(`Registration successful! Welcome ${name}, your ${role.toUpperCase()} UserID is: ${data.userid}`);
+
+        // Redirect to login
+        window.location.href = "loginpage.html";
+      } catch (err) {
+        console.error(err);
+        alert("Unable to connect to server.");
+      }
+    });
+  </script>
+</body>
+</html>
