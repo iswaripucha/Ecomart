@@ -5,12 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Eco Mart - Campus Sustainability</title>
   <link rel="stylesheet" href="style_new.css">
+ <style>
+    .ecologo {
+    height: 45px; /* Define height here instead of inline */
+    border-radius: 50%; /* Makes the logo perfectly round if it's square */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Adds a subtle shadow */
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Smooth transition for hover effects */
+    cursor: pointer; /* Indicates it's interactive */
+}
+
+.ecologo:hover {
+    transform: scale(1.1); /* Slightly enlarges the logo on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Makes shadow more prominent on hover */
+}
+  </style>
 </head>
 <body>
   <!-- Navbar -->
   <header>
     <nav class="navbar">
-      <div class="logo">Eco<span>Mart</span></div>
+      <div style="display: flex; align-items: center;">
+    <img src="logo.jpg" alt="EcoMart Logo" class="ecologo" style="margin-right: 15px; vertical-align: middle;">
+    
+    <div style="display: flex; flex-direction: column;">
+      <span style="font-size: 1.6rem; font-weight: bold; color: #ffffff; line-height: 1;">EcoMart</span>
+      <strong style="font-weight: normal;"><span style="font-size: 0.9rem; color: #dadada;">Student Ecostore For Reusing Items</span></strong>
+    </div>
+  </div>
       <ul class="nav-links">
         <li><a href="#">Home</a></li>
         <li><a href="#about">About</a></li>
