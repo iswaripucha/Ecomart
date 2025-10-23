@@ -3,40 +3,568 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eco Mart - Buyer</title>
+  <title>EcoMart - Student Eco Store</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* User menu dropdown styles */
+    
+    .user-menu {
+      position: relative;
+      display: inline-block;
+    }
+
+    .username {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .username:after {
+      content: '▼';
+      font-size: 10px;
+      margin-left: 5px;
+    }
+    .nav-links {
+  list-style: none;
+  display: flex;
+  gap: 25px;
+}
+.nav-links a {
+  text-decoration: none;
+  color: #fff;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+.nav-links a:hover {
+  color: #ffec9f;
+}
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 10px;
+      min-width: 120px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      z-index: 1;
+      border-radius: 400px;
+      overflow: hidden;
+      background-color: tomato;
+    }
+    
+    .dropdown-menu a {
+      color: #333;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    
+    .dropdown-menu a:hover {
+      background-color: tomato;
+      color: white;
+    }
+    
+    .user-menu.active .dropdown-menu {
+      display: block;
+    }
+    
+    /* Additional styles for the buyer page */
+    .hero-section {
+      background: linear-gradient(rgba(184, 184, 184, 0.6), rgba(9, 9, 9, 0.6)), url("campus-3.jpg");
+      background-size: 100%;
+      background-position: center;
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    
+    .hero-section h1 {
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+      font-size: 3.5rem;
+      margin-bottom: 100px;
+    }
+    
+    .hero-section p {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+    }
+    
+    .search-container {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      background: white;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .search-container input {
+      flex: 1;
+      padding: 15px 20px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+    }
+    
+    .search-container button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      padding: 0 25px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background: white;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .filter-group select {
+      padding: 8px 15px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 20px 0;
+    }
+    
+    .product-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .product-image {
+      height: 200px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    
+    .product-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #2e7d32;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    .product-info {
+      padding: 15px;
+    }
+    
+    .product-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 1.1rem;
+    }
+    
+    .product-university {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+    
+    .product-price {
+      font-weight: bold;
+      color: #2e7d32;
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+    }
+    
+    .view-details-btn {
+      display: block;
+      text-align: center;
+      background: #2e7d32;
+      color: white;
+      padding: 8px 0;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: background 0.3s ease;
+    }
+    
+    .view-details-btn:hover {
+      background: #bdb748;
+    }
+    
+    .products-count {
+      text-align: right;
+      color: #666;
+      margin: 10px 0;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: #1b4332;
+      color: white;
+    }
+    
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+    
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: bold;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .action-buttons a {
+      padding: 8px 15px;
+      border-radius: 4px;
+      text-decoration: none;
+    }
+    
+    .browse-btn {
+      background: white;
+      color: #2e7d32;
+    }
+
+.ecologo {
+    height: 45px; /* Define height here instead of inline */
+    border-radius: 50%; /* Makes the logo perfectly round if it's square */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Adds a subtle shadow */
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Smooth transition for hover effects */
+    cursor: pointer; /* Indicates it's interactive */
+}
+
+.ecologo:hover {
+    transform: scale(1.1); /* Slightly enlarges the logo on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Makes shadow more prominent on hover */
+}
+
+    
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>Eco Mart</h1>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="index.html">Logout</a>
+ <header>
+  <div style="display: flex; align-items: center;">
+    <img src="logo.jpg" alt="EcoMart Logo" class="ecologo" style="margin-right: 15px; vertical-align: middle;">
+    <div style="display: flex; flex-direction: column;">
+      <span style="font-size: 1.6rem; font-weight: bold; color: #ffffff; line-height: 1;">EcoMart</span>
+      <strong style="font-weight: normal;"><span style="font-size: 0.9rem; color: #dadada;">Student Ecostore For Reusing Items</span></strong>
+    </div>
+  </div>
+  
+   <nav>
+      <ul class="nav-links">
+        <li><a href="eco_home.html">Home</a></li>
+      <div class="user-menu">
+        <a href="#" class="username" id="usernameDisplay">Hello User</a>
+        <div class="dropdown-menu">
+          <a href="loginpage.html">Logout</a>
+        </div>
+      </div>
+      </ul>
     </nav>
-  </header>
+</header>
+
+  <div class="hero-section">
+    <h1>Find What You Need</h1>
+    <p></p>
+    
+    <div class="search-container">
+      <input type="text" id="search-bar" placeholder="Search for textbooks, electronics, furniture...">
+      <button type="submit">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
 
   <main>
-    <h2>Available Products</h2>
-
-    <!-- Filter + Search -->
-    <div class="filter-search-container">
-      <label for="category-filter"><strong>Category:</strong></label>
-      <select id="category-filter">
-        <option value="all">All</option>
-        <option value="Academic">📚 Academic</option>
-        <option value="Clothing">👕 Clothing</option>
-        <option value="Electronics">💻 Electronics</option>
-        <option value="Hostel Essentials">🏠 Hostel Essentials</option>
-      </select>
-
-      <input type="text" id="search-bar" placeholder="🔍 Search product...">
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label for="category-filter">Categories</label>
+        <select id="category-filter">
+          <option value="all">All</option>
+          <option value="Academic">📚 Academic</option>
+          <option value="Clothing">👕 Clothing</option>
+          <option value="Electronics">💻 Electronics</option>
+          <option value="Hostel Essentials">🏠 Hostel Essentials</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="condition-filter">Conditions</label>
+        <select id="condition-filter">
+          <option value="all">All</option>
+          <option value="New">New</option>
+          <option value="Used">Used</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="price-filter">Price_Range</label>
+        <select id="price-filter">
+          <option value="all">All Prices</option>
+          <option value="0-500">₹0 - ₹500</option>
+          <option value="500-2000">₹500 - ₹2000</option>
+          <option value="2000-5000">₹2000 - ₹5000</option>
+          <option value="5000+">₹5000+</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="sort-filter">Sort_By</label>
+        <select id="sort-filter">
+          <option value="newest">Newest First</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="products-count">
+      <span id="products-found"></span>
     </div>
 
     <div class="product-grid" id="product-list">
-      <!-- Products load dynamically -->
-    </div>
+      </div>
   </main>
+  
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Define the products to be added
+    const initialProducts = [
+      {
+        title: "Headphones",
+        category: "Electronics", // Added category
+        condition: "New",
+        price: "3200",
+        seller: "Campus Tech Store",
+        image: "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MQTP3?wid=1144&hei=1144&fmt=jpeg&qlt=90&.v=SUFReFd6NEVVOW50TTcxUzVyWlhHZ2tuVHYzMERCZURia3c5SzJFOTlPZ3oveDdpQVpwS0ltY2w2UW05aU90TzVtaW9peGdOaitwV1Nxb1VublZoTVE"
+      },
+      {
+        title: "Calculus Textbook",
+        category: "Academic", // Added category
+        condition: "Used",
+        price: "800",
+        seller: "Previous Semester Student",
+        image: "https://u-mercari-images.mercdn.net/photos/m18476620072_1.jpg"
+      }, // <-- THE MISSING COMMA GOES HERE!
+      {
+        title: "Study Lamp",
+        category: "Hostel Essentials",
+        condition: "New",
+        price: "1500",
+        seller: "Campus Corner",
+        image: "https://rukminim2.flixcart.com/image/480/640/xif0q/table-lamp/l/9/2/touch-switch-desk-night-study-lamp-for-children-reading-office-original-imah54fazkfmhv2q.jpeg?q=90"
+      },
+      {
+        title: "Lab Coat",
+        category: "Clothing",
+        condition: "Used",
+        price: "350",
+        seller: "Alumni Store",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTD8yKp7KNqhq_jv0M1_DeW2Mi439GM1TqOqg&s"
+      },
+      {
+        title: "Mini Fridge",
+        category: "Hostel Essentials",
+        condition: "Used",
+        price: "4500",
+        seller: "Graduating Senior",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPDcdVuhZsDISD-UAj5VHVybRID0poVtkiSg&s"
+      },
+      {
+        title: "Data Structures Notes",
+        category: "Academic",
+        condition: "Used",
+        price: "350",
+        seller: "CS Student",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkrreCIFJfdPJddtF4GA90GMdrma3tnlWg4Q&s"
+      }
+    ];
+    
+    // Store the products in localStorage
+    localStorage.setItem('ecomartProducts', JSON.stringify(initialProducts));
+  });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // --- 1. SETUP ---
+  // User menu dropdown functionality
+  const userMenu = document.querySelector('.user-menu');
+  const username = document.querySelector('.username');
+  
+  if (username) {
+    username.addEventListener('click', function(e) {
+      e.preventDefault();
+      userMenu.classList.toggle('active');
+    });
+    
+    document.addEventListener('click', function(e) {
+      if (!userMenu.contains(e.target)) {
+        userMenu.classList.remove('active');
+      }
+    });
+    
+    const storedUsername = localStorage.getItem('ecomartUsername');
+    if (storedUsername) {
+      document.getElementById('usernameDisplay').textContent = `Hello, ${storedUsername}`;
+    }
+  }
 
-  <script src="script.js"></script>
+  // Get references to all filter and display elements
+  const productsContainer = document.getElementById('product-list');
+  const searchInput = document.getElementById('search-bar');
+  const categoryFilter = document.getElementById('category-filter');
+  const conditionFilter = document.getElementById('condition-filter');
+  const priceFilter = document.getElementById('price-filter');
+  const sortFilter = document.getElementById('sort-filter');
+  const productsFound = document.getElementById('products-found');
+
+  // --- 2. CORE FILTERING AND DISPLAY LOGIC ---
+  function updateProductDisplay() {
+    // Get current values from all filters
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedCategory = categoryFilter.value;
+    const selectedCondition = conditionFilter.value;
+    const selectedPrice = priceFilter.value;
+    const selectedSort = sortFilter.value;
+
+    // Get the master product list from localStorage
+    let allProducts = JSON.parse(localStorage.getItem('ecomartProducts')) || [];
+    let filteredProducts = allProducts;
+
+    // Apply search filter
+    if (searchTerm) {
+        filteredProducts = filteredProducts.filter(product => 
+            product.title.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    // Apply category filter
+    if (selectedCategory !== 'all') {
+        filteredProducts = filteredProducts.filter(product => 
+            product.category === selectedCategory
+        );
+    }
+
+    // Apply condition filter
+    if (selectedCondition !== 'all') {
+        filteredProducts = filteredProducts.filter(product => 
+            product.condition === selectedCondition
+        );
+    }
+
+    // Apply price filter
+    if (selectedPrice !== 'all') {
+        filteredProducts = filteredProducts.filter(product => {
+            const price = parseFloat(product.price);
+            switch (selectedPrice) {
+                case '0-500': return price >= 0 && price <= 500;
+                case '500-2000': return price > 500 && price <= 2000;
+                case '2000-5000': return price > 2000 && price <= 5000;
+                case '5000+': return price > 5000;
+                default: return true;
+            }
+        });
+    }
+
+    // Apply sorting
+    if (selectedSort === 'price-low') {
+        filteredProducts.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+    } else if (selectedSort === 'price-high') {
+        filteredProducts.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+    }
+    
+    renderProducts(filteredProducts);
+  }
+
+  function renderProducts(products) {
+    // Clear the existing product grid
+    productsContainer.innerHTML = '';
+    
+    // Update the count of found products
+    productsFound.textContent = `${products.length} product(s) found`;
+
+    if (products.length === 0) {
+      productsContainer.innerHTML = '<p style="text-align:center; width:100%;">No products match your criteria.</p>';
+      return;
+    }
+
+    // Display each product
+    products.forEach(product => {
+      const productCard = document.createElement('div');
+      productCard.className = 'product-card';
+      
+      productCard.innerHTML = `
+        <div class="product-image" style="background-image: url(${product.image || 'placeholder.jpg'})">
+          <div class="product-badge">${product.condition}</div>
+        </div>
+        <div class="product-info">
+          <div class="product-title">${product.title}</div>
+          <div class="product-university">${product.seller}</div>
+          <div class="product-price">₹${product.price}</div>
+          <a href="#" class="view-details-btn">Request To Buy</a>
+        </div>
+      `;
+      
+      productsContainer.appendChild(productCard);
+    });
+  }
+
+  // --- 3. EVENT LISTENERS ---
+  // Add event listeners to all controls to trigger the update function
+  searchInput.addEventListener('input', updateProductDisplay);
+  categoryFilter.addEventListener('change', updateProductDisplay);
+  conditionFilter.addEventListener('change', updateProductDisplay);
+  priceFilter.addEventListener('change', updateProductDisplay);
+  sortFilter.addEventListener('change', updateProductDisplay);
+
+  // --- 4. INITIAL LOAD ---
+  // Load all products when the page first loads
+  updateProductDisplay(); 
+});
+</script>
 </body>
 </html>

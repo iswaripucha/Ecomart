@@ -94,8 +94,8 @@
     </div>
 
     <div id="main-page-content" class="hidden">
-        <div class="main-banner">
-            <h1>SELL NOW!</h1>
+        <div class="main-banner" style="background-image: url('campus-3.jpg'); background-size: cover; background-position: center; padding: 50px 0; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">
+            <h1 style="color: rgb(170, 129, 57);">SELL NOW!</h1>
         </div>
 
         <div class="form-container">
@@ -175,5 +175,74 @@
     <!-- Products added here dynamically -->
 </section>
     <script src="script.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const policyModal = document.getElementById('policy-modal');
+      const proceedBtn = document.getElementById('proceed-btn');
+      const policyCheck = document.getElementById('acknowledge-policy');
+      const mainContent = document.getElementById('main-page-content');
+      const productForm = document.getElementById('product-form');
+      
+      // Show policy modal on page load
+      policyModal.style.display = 'flex';
+      
+      // Enable proceed button when checkbox is checked
+      policyCheck.addEventListener('change', function() {
+        proceedBtn.disabled = !this.checked;
+      });
+      
+      // Close modal and show form when proceed button is clicked
+      proceedBtn.addEventListener('click', function() {
+        if (policyCheck.checked) {
+          policyModal.style.display = 'none';
+          mainContent.classList.remove('hidden');
+        }
+      });
+      
+      // Handle form submission
+      if (productForm) {
+        productForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          // Get form values
+          const title = document.getElementById('listing-title').value;
+          const category = document.getElementById('category-select').value;
+          const condition = document.getElementById('condition-field').value;
+          const price = document.getElementById('price-field').value;
+          const location = document.getElementById('location-select').value;
+          const description = document.getElementById('description').value;
+          
+          // Create product object
+          const product = {
+            id: Date.now().toString(),
+            title: title,
+            category: category,
+            condition: condition,
+            price: price,
+            location: location,
+            description: description,
+            image: 'campus-3.jpg', // Using campus-3.jpg as the product image
+            seller: 'Current User',
+            date: new Date().toISOString()
+          };
+          
+          // Get existing products from localStorage or initialize empty array
+          let products = JSON.parse(localStorage.getItem('ecomartProducts')) || [];
+          
+          // Add new product to array
+          products.push(product);
+          
+          // Save updated products array to localStorage
+          localStorage.setItem('ecomartProducts', JSON.stringify(products));
+          
+          // Show success message
+          alert('Product added successfully! It will now be visible on the buyer page.');
+          
+          // Reset form
+          productForm.reset();
+        });
+      }
+    });
+    </script>
 </body>
 </html>
