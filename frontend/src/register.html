@@ -135,12 +135,20 @@
         return;
       }
 
+      console.log('Attempting registration with:', { name, email, role });
+      
       try {
-        const res = await fetch("http://localhost:3000/register", {
+        console.log('Sending request to server...');
+        const res = await fetch("http://127.0.0.1:3000/register", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
           body: JSON.stringify({ name, email, password, role })
         });
+        
+        console.log('Response received:', res.status);
 
         const data = await res.json();
 
@@ -149,14 +157,17 @@
           return;
         }
 
+        // ✅ Save full name locally for later display on dashboards
+        localStorage.setItem("ecomartFullName", name);
+
         // Show assigned role-based UserID
         alert(`Registration successful! Welcome ${name}, your ${role.toUpperCase()} UserID is: ${data.userid}`);
 
         // Redirect to login
         window.location.href = "loginpage.html";
       } catch (err) {
-        console.error(err);
-        alert("Unable to connect to server.");
+        console.error('Registration error:', err);
+        alert("Registration failed: " + (err.message || "Unable to connect to server. Please make sure the server is running."));
       }
     });
   </script>

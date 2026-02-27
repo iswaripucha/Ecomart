@@ -178,6 +178,49 @@
       border-radius: 4px;
       font-size: 12px;
     }
+    /* Blur utility used by modals/forms to de-emphasize the page */
+    .blur-background {
+      filter: blur(5px);
+      pointer-events: none;
+      user-select: none;
+      opacity: 0.9;
+    }
+
+    /* Seller contact modal styles */
+    .seller-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      padding: 28px;
+    }
+
+    .seller-modal-content {
+      background: #fff;
+      border-radius: 12px;
+      /* increase width but keep responsive on small screens */
+      max-width: 720px;
+      width: min(720px, 96%);
+      padding: 28px 26px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.28);
+      position: relative;
+      color: #333;
+    }
+
+    .seller-modal-content h3 { margin: 0 0 10px 0; font-size:1.15rem; }
+    .seller-modal-body { color: #555; font-size: 1rem; line-height: 1.6; margin: 12px 0 18px; }
+    .seller-modal-actions { margin-top: 18px; display:flex; gap:12px; align-items:center; }
+    .seller-mail-btn { background:#2e7d32; color:#fff; padding:12px 16px; border-radius:8px; text-decoration:none; font-weight:600; }
+    .seller-copy-btn { background:#fff; border:1px solid #ddd; padding:10px 14px; border-radius:8px; cursor:pointer; }
+    .seller-close-btn { position:absolute; right:12px; top:10px; background:transparent; border:none; font-size:20px; cursor:pointer; }
+
+    /* Slightly larger modal on very wide screens */
+    @media (min-width: 1200px) {
+      .seller-modal-content { max-width: 820px; }
+    }
     
     .product-info {
       padding: 15px;
@@ -298,7 +341,7 @@
       <div class="user-menu">
         <a href="#" class="username" id="usernameDisplay">Hello User</a>
         <div class="dropdown-menu">
-          <a href="loginpage.html">Logout</a>
+          <a href="loginpage.html" id="logoutLink">Logout</a>
         </div>
       </div>
       </ul>
@@ -325,10 +368,10 @@
         <label for="category-filter">Categories</label>
         <select id="category-filter">
           <option value="all">All</option>
-          <option value="Academic">📚 Academic</option>
-          <option value="Clothing">👕 Clothing</option>
-          <option value="Electronics">💻 Electronics</option>
-          <option value="Hostel Essentials">🏠 Hostel Essentials</option>
+          <option value="academic">📚 Academic</option>
+          <option value="clothing">👕 Clothing</option>
+          <option value="electronics">💻 Electronics</option>
+          <option value="hostel">🏠 Hostel Essentials</option>
         </select>
       </div>
       
@@ -336,8 +379,9 @@
         <label for="condition-filter">Conditions</label>
         <select id="condition-filter">
           <option value="all">All</option>
-          <option value="New">New</option>
-          <option value="Used">Used</option>
+          <option value="new">New</option>
+          <option value="like-new">Like New</option>
+          <option value="used">Used</option>
         </select>
       </div>
       
@@ -370,66 +414,193 @@
       </div>
   </main>
   
+    <!-- Seller contact modal -->
+    <div id="seller-contact-modal" class="seller-modal-overlay" aria-hidden="true">
+      <div class="seller-modal-content" role="dialog" aria-modal="true" aria-labelledby="seller-modal-title">
+        <button id="close-seller-modal" class="seller-close-btn" aria-label="Close">&times;</button>
+        <h3 id="seller-modal-title" style="text-align:center;">Contact Seller</h3>
+        <div id="seller-contact-text" class="seller-modal-body">Loading…</div>
+        <div class="seller-modal-actions">
+          <a id="seller-mail-link" class="seller-mail-btn" href="#">Email Seller</a>
+          <button id="copy-seller-email" class="seller-copy-btn">Copy</button>
+          <div style="flex:1"></div>
+        </div>
+      </div>
+    </div>
+  
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Define the products to be added
-    const initialProducts = [
-      {
-        title: "Headphones",
-        category: "Electronics", // Added category
-        condition: "New",
-        price: "3200",
-        seller: "Campus Tech Store",
-        image: "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MQTP3?wid=1144&hei=1144&fmt=jpeg&qlt=90&.v=SUFReFd6NEVVOW50TTcxUzVyWlhHZ2tuVHYzMERCZURia3c5SzJFOTlPZ3oveDdpQVpwS0ltY2w2UW05aU90TzVtaW9peGdOaitwV1Nxb1VublZoTVE"
-      },
-      {
-        title: "Calculus Textbook",
-        category: "Academic", // Added category
-        condition: "Used",
-        price: "800",
-        seller: "Previous Semester Student",
-        image: "https://u-mercari-images.mercdn.net/photos/m18476620072_1.jpg"
-      }, // <-- THE MISSING COMMA GOES HERE!
-      {
-        title: "Study Lamp",
-        category: "Hostel Essentials",
-        condition: "New",
-        price: "1500",
-        seller: "Campus Corner",
-        image: "https://rukminim2.flixcart.com/image/480/640/xif0q/table-lamp/l/9/2/touch-switch-desk-night-study-lamp-for-children-reading-office-original-imah54fazkfmhv2q.jpeg?q=90"
-      },
-      {
-        title: "Lab Coat",
-        category: "Clothing",
-        condition: "Used",
-        price: "350",
-        seller: "Alumni Store",
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTD8yKp7KNqhq_jv0M1_DeW2Mi439GM1TqOqg&s"
-      },
-      {
-        title: "Mini Fridge",
-        category: "Hostel Essentials",
-        condition: "Used",
-        price: "4500",
-        seller: "Graduating Senior",
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPDcdVuhZsDISD-UAj5VHVybRID0poVtkiSg&s"
-      },
-      {
-        title: "Data Structures Notes",
-        category: "Academic",
-        condition: "Used",
-        price: "350",
-        seller: "CS Student",
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkrreCIFJfdPJddtF4GA90GMdrma3tnlWg4Q&s"
+  // Define DOM elements globally for reuse
+  let productsContainer;
+  let productsFound;
+  let searchInput;
+  let categoryFilter;
+  let conditionFilter;
+  let priceFilter;
+  let sortFilter;
+
+  // Function to initialize DOM elements
+  function initializeDOMElements() {
+    productsContainer = document.getElementById('product-list');
+    productsFound = document.getElementById('products-found');
+    searchInput = document.getElementById('search-bar');
+    categoryFilter = document.getElementById('category-filter');
+    conditionFilter = document.getElementById('condition-filter');
+    priceFilter = document.getElementById('price-filter');
+    sortFilter = document.getElementById('sort-filter');
+  }
+
+  // Define core display functions
+  function updateProductDisplay() {
+    // Ensure DOM elements are initialized
+    if (!productsContainer) {
+      initializeDOMElements();
+    }
+
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedCategory = categoryFilter.value;
+    const selectedCondition = conditionFilter.value;
+    const selectedPrice = priceFilter.value;
+    const selectedSort = sortFilter.value;
+
+    // Use in-memory approved products if available
+    let allProducts = window.approvedProducts;
+    if (!Array.isArray(allProducts)) {
+      const cached = JSON.parse(localStorage.getItem('ecomartProducts') || 'null');
+      if (Array.isArray(cached) && cached.length > 0) {
+        allProducts = cached;
+      } else {
+        productsContainer.innerHTML = '<p style="text-align:center; width:100%;">Loading products...</p>';
+        productsFound.textContent = '';
+        return;
       }
-    ];
+    }
+
+    let filteredProducts = allProducts;
+
+    // Apply search filter
+    if (searchTerm) {
+      filteredProducts = filteredProducts.filter(product => 
+        product.title.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Apply category filter
+    const selectedCategoryLower = (selectedCategory || '').toString().toLowerCase();
+    if (selectedCategoryLower !== 'all') {
+      filteredProducts = filteredProducts.filter(product => 
+        (product.category || '').toString().toLowerCase().includes(selectedCategoryLower)
+      );
+    }
+
+    // Apply condition filter
+    const selectedConditionLower = (selectedCondition || '').toString().toLowerCase();
+    if (selectedConditionLower !== 'all') {
+      filteredProducts = filteredProducts.filter(product => 
+        (product.condition || '').toString().toLowerCase() === selectedConditionLower
+      );
+    }
+
+    // Apply price filter
+    if (selectedPrice !== 'all') {
+      filteredProducts = filteredProducts.filter(product => {
+        const price = parseFloat(product.price);
+        switch (selectedPrice) {
+          case '0-500': return price >= 0 && price <= 500;
+          case '500-2000': return price > 500 && price <= 2000;
+          case '2000-5000': return price > 2000 && price <= 5000;
+          case '5000+': return price > 5000;
+          default: return true;
+        }
+      });
+    }
+
+    // Apply sorting
+    if (selectedSort === 'price-low') {
+      filteredProducts.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+    } else if (selectedSort === 'price-high') {
+      filteredProducts.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+    }
     
-    // Store the products in localStorage
-    localStorage.setItem('ecomartProducts', JSON.stringify(initialProducts));
+    renderProducts(filteredProducts);
+  }
+
+  function renderProducts(products) {
+    // Ensure DOM elements are initialized
+    if (!productsContainer) {
+      initializeDOMElements();
+    }
+    
+    if (!productsContainer || !productsFound) {
+      console.error('Required DOM elements not found');
+      return;
+    }
+    
+    productsContainer.innerHTML = '';
+    productsFound.textContent = `${products.length} product(s) found`;
+
+    if (products.length === 0) {
+      productsContainer.innerHTML = '<p style="text-align:center; width:100%;">No products match your criteria.</p>';
+      return;
+    }
+    
+    products.forEach(product => {
+      const productCard = document.createElement('div');
+      productCard.className = 'product-card';
+      const imageUrl = product.image ? 
+        `http://localhost:3000${product.image}` : 
+        'placeholder.jpg';
+      
+      productCard.innerHTML = `
+        <div class="product-image" style="background-image: url('${imageUrl}'); background-size: cover; background-position: center;">
+          <div class="product-badge">${product.condition || 'New'}</div>
+        </div>
+        <div class="product-info">
+          <div class="product-title">${product.title}</div>
+          <div class="product-university">Seller: ${product.sellerName || product.seller || 'Unknown'}</div>
+          <div class="product-price">₹${product.price}</div>
+          <a href="#" class="view-details-btn" data-product-id="${product.id}">Request To Buy</a>
+        </div>
+      `;
+      
+      productsContainer.appendChild(productCard);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Initial products will be fetched from server
+    async function fetchApprovedProducts() {
+      try {
+        console.log('Fetching approved products...');
+        const response = await fetch('http://localhost:3000/products/approved');
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}`);
+        }
+        const products = await response.json();
+        console.log('Received approved products:', products);
+        // Keep an in-memory copy so the UI always uses fresh server data
+        window.approvedProducts = products;
+        // Update the products in localStorage as a cache (optional)
+        localStorage.setItem('ecomartProducts', JSON.stringify(products));
+        // Now safe to call updateProductDisplay since it's defined above
+        updateProductDisplay();
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        document.getElementById('product-list').innerHTML = 
+          '<p style="text-align:center; width:100%;">Error loading products. Please try again later.</p>';
+      }
+    }
+
+    // Fetch approved products when page loads
+    console.log('Initializing buyer page...');
+    await fetchApprovedProducts();
   });
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Initialize DOM elements first
+  initializeDOMElements();
+  
   // --- 1. SETUP ---
   // User menu dropdown functionality
   const userMenu = document.querySelector('.user-menu');
@@ -447,22 +618,33 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
+    // Prefer the registered full name if available, otherwise fall back to userid
+    const storedFullName = localStorage.getItem('ecomartFullName');
     const storedUsername = localStorage.getItem('ecomartUsername');
-    if (storedUsername) {
+    if (storedFullName) {
+      document.getElementById('usernameDisplay').textContent = `Hello, ${storedFullName}`;
+    } else if (storedUsername) {
       document.getElementById('usernameDisplay').textContent = `Hello, ${storedUsername}`;
+    }
+
+    // Ensure logout clears stored identity
+    const logoutLink = document.getElementById('logoutLink');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', function() {
+        localStorage.removeItem('ecomartUsername');
+        localStorage.removeItem('ecomartFullName');
+        localStorage.removeItem('ecomartRole');
+      });
     }
   }
 
-  // Get references to all filter and display elements
-  const productsContainer = document.getElementById('product-list');
-  const searchInput = document.getElementById('search-bar');
-  const categoryFilter = document.getElementById('category-filter');
-  const conditionFilter = document.getElementById('condition-filter');
-  const priceFilter = document.getElementById('price-filter');
-  const sortFilter = document.getElementById('sort-filter');
-  const productsFound = document.getElementById('products-found');
-
-  // --- 2. CORE FILTERING AND DISPLAY LOGIC ---
+  // Add event listeners to all controls to trigger the update function
+  // We can use the already initialized elements from above
+  searchInput.addEventListener('input', updateProductDisplay);
+  categoryFilter.addEventListener('change', updateProductDisplay);
+  conditionFilter.addEventListener('change', updateProductDisplay);
+  priceFilter.addEventListener('change', updateProductDisplay);
+  sortFilter.addEventListener('change', updateProductDisplay);
   function updateProductDisplay() {
     // Get current values from all filters
     const searchTerm = searchInput.value.toLowerCase();
@@ -471,8 +653,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedPrice = priceFilter.value;
     const selectedSort = sortFilter.value;
 
-    // Get the master product list from localStorage
-    let allProducts = JSON.parse(localStorage.getItem('ecomartProducts')) || [];
+    // Use in-memory approved products if available (fresh from server),
+    // otherwise fall back to cached localStorage. If neither exists, show loading.
+    let allProducts = window.approvedProducts;
+    if (!Array.isArray(allProducts)) {
+      const cached = JSON.parse(localStorage.getItem('ecomartProducts') || 'null');
+      if (Array.isArray(cached) && cached.length > 0) {
+        // Use cached data only as a fallback
+        allProducts = cached;
+      } else {
+        // No data yet -> show loading placeholder and return early
+        productsContainer.innerHTML = '<p style="text-align:center; width:100%;">Loading products...</p>';
+        productsFound.textContent = '';
+        return;
+      }
+    }
     let filteredProducts = allProducts;
 
     // Apply search filter
@@ -482,17 +677,19 @@ document.addEventListener('DOMContentLoaded', function() {
         );
     }
 
-    // Apply category filter
-    if (selectedCategory !== 'all') {
+      // Apply category filter (normalize to lowercase)
+    const selectedCategoryLower = (selectedCategory || '').toString().toLowerCase();
+    if (selectedCategoryLower !== 'all') {
         filteredProducts = filteredProducts.filter(product => 
-            product.category === selectedCategory
+            (product.category || '').toString().toLowerCase().includes(selectedCategoryLower)
         );
     }
 
-    // Apply condition filter
-    if (selectedCondition !== 'all') {
+    // Apply condition filter (normalize to lowercase)
+    const selectedConditionLower = (selectedCondition || '').toString().toLowerCase();
+    if (selectedConditionLower !== 'all') {
         filteredProducts = filteredProducts.filter(product => 
-            product.condition === selectedCondition
+            (product.condition || '').toString().toLowerCase() === selectedConditionLower
         );
     }
 
@@ -527,25 +724,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update the count of found products
     productsFound.textContent = `${products.length} product(s) found`;
 
-    if (products.length === 0) {
+      if (products.length === 0) {
       productsContainer.innerHTML = '<p style="text-align:center; width:100%;">No products match your criteria.</p>';
       return;
     }
+    
+    console.log('Rendering products:', products);
 
     // Display each product
     products.forEach(product => {
       const productCard = document.createElement('div');
-      productCard.className = 'product-card';
+      productCard.className = 'product-card';      // Construct proper image URL using the backend URL
+      const imageUrl = product.image ? 
+        `http://localhost:3000${product.image}` : 
+        'placeholder.jpg';
+      
+      console.log('Product image URL:', imageUrl);
       
       productCard.innerHTML = `
-        <div class="product-image" style="background-image: url(${product.image || 'placeholder.jpg'})">
-          <div class="product-badge">${product.condition}</div>
+        <div class="product-image" style="background-image: url('${imageUrl}'); background-size: cover; background-position: center;">
+          <div class="product-badge">${product.condition || 'New'}</div>
         </div>
         <div class="product-info">
           <div class="product-title">${product.title}</div>
-          <div class="product-university">${product.seller}</div>
+          <div class="product-university">Seller: ${product.sellerName || product.seller || 'Unknown'}</div>
           <div class="product-price">₹${product.price}</div>
-          <a href="#" class="view-details-btn">Request To Buy</a>
+          <a href="#" class="view-details-btn" data-product-id="${product.id}">Request To Buy</a>
         </div>
       `;
       
@@ -561,9 +765,103 @@ document.addEventListener('DOMContentLoaded', function() {
   priceFilter.addEventListener('change', updateProductDisplay);
   sortFilter.addEventListener('change', updateProductDisplay);
 
+  // --- Request to Buy handler (delegated) ---
+  productsContainer.addEventListener('click', async function (e) {
+    const btn = e.target.closest('.view-details-btn');
+    if (!btn) return;
+    e.preventDefault();
+    const productId = btn.getAttribute('data-product-id');
+    if (!productId) return alert('Product id missing');
+
+    const modal = document.getElementById('seller-contact-modal');
+    const contactText = document.getElementById('seller-contact-text');
+    const mailLink = document.getElementById('seller-mail-link');
+    const copyBtn = document.getElementById('copy-seller-email');
+
+  // show loading state and blur the page
+  contactText.textContent = 'Fetching seller contact...';
+  mailLink.href = '#';
+  mailLink.textContent = 'Email Seller';
+  modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden','false');
+  // blur main content similar to seller page behavior
+  toggleMainContentBlur(true);
+
+    try {
+      const res = await fetch(`http://localhost:3000/products/${encodeURIComponent(productId)}/seller-email`);
+      if (!res.ok) {
+        const txt = await res.text().catch(()=>res.statusText);
+        throw new Error(txt || 'Failed to fetch seller info');
+      }
+      const data = await res.json();
+      const email = data.email || 'Not available';
+      // include product title when available for context
+      const product = (window.approvedProducts || []).find(p=>String(p.id)===String(productId));
+      const productTitle = product ? product.title : '';
+      const displayName = data.sellerName || '';
+      contactText.innerHTML = `Contact <strong>${escapeHtml(displayName)}</strong>` +
+        (productTitle ? ` about <em>"${escapeHtml(productTitle)}"</em>` : '') +
+        ` at <strong>${escapeHtml(email)}</strong> to buy this item.`;
+      mailLink.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent('Interested in your item' + (productTitle ? (': '+productTitle) : ''))}`;
+      mailLink.textContent = `Email ${email}`;
+
+      copyBtn.onclick = () => {
+        if (!email || email === 'Not available') return;
+        navigator.clipboard?.writeText(email).then(()=>{
+          const prev = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          setTimeout(()=> copyBtn.textContent = prev, 1500);
+        }).catch(()=>{
+          alert('Could not copy email to clipboard');
+        });
+      };
+    } catch (err) {
+      console.error('Error fetching seller email:', err);
+      contactText.textContent = 'Unable to retrieve seller contact. Please try again later.';
+      mailLink.href = '#';
+      mailLink.textContent = 'Email Seller';
+    }
+  });
+
+  // Modal close handlers
+  // Close handlers should also remove blur
+  document.getElementById('close-seller-modal').addEventListener('click', ()=>{
+    const modalEl = document.getElementById('seller-contact-modal');
+    modalEl.style.display = 'none';
+    modalEl.setAttribute('aria-hidden','true');
+    toggleMainContentBlur(false);
+  });
+  document.getElementById('seller-contact-modal').addEventListener('click', (e)=>{
+    if (e.target.id === 'seller-contact-modal') {
+      const modalEl = document.getElementById('seller-contact-modal');
+      modalEl.style.display = 'none';
+      modalEl.setAttribute('aria-hidden','true');
+      toggleMainContentBlur(false);
+    }
+  });
+
+  // Add escapeHtml helper usage in this scope
+  function escapeHtml(str) {
+    if (!str && str !== 0) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Blur toggler - add/remove blur class from main page elements
+  function toggleMainContentBlur(blur) {
+    const selectors = ['header', '.hero-section', '.filter-bar', 'main', '.products-count', 'footer'];
+    const nodes = document.querySelectorAll(selectors.join(', '));
+    nodes.forEach(n => {
+      if (blur) n.classList.add('blur-background'); else n.classList.remove('blur-background');
+    });
+  }
+
   // --- 4. INITIAL LOAD ---
-  // Load all products when the page first loads
-  updateProductDisplay(); 
+  // The initial rendering is triggered after the server fetch completes
 });
 </script>
 </body>

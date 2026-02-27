@@ -188,9 +188,9 @@
       <ul class="nav-links">
         <li><a href="eco_home.html">Home</a></li>
         <div class="user-menu">
-          <a href="#" class="username" id="usernameDisplay">Admin</a>
+          <a href="#" class="username" id="usernameDisplay">Hello Admin</a>
           <div class="dropdown-menu">
-            <a href="loginpage.html">Logout</a>
+            <a href="loginpage.html" id="logoutLink">Logout</a>
           </div>
         </div>
       </ul>
@@ -256,89 +256,189 @@
     <p>&copy; 2025 EcoMart. All Rights Reserved.</p>
   </footer>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const userMenu = document.querySelector('.user-menu');
-      const username = document.querySelector('.username');
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const userMenu = document.querySelector('.user-menu');
+  const username = document.querySelector('.username');
 
-      username.addEventListener('click', function(e) {
-        e.preventDefault();
-        userMenu.classList.toggle('active');
-      });
-      document.addEventListener('click', function(e) {
-        if (!userMenu.contains(e.target)) {
-          userMenu.classList.remove('active');
+  username.addEventListener('click', function(e) {
+    e.preventDefault();
+    userMenu.classList.toggle('active');
+  });
+  document.addEventListener('click', function(e) {
+    if (!userMenu.contains(e.target)) {
+      userMenu.classList.remove('active');
+    }
+  });
+
+  // Display greeting: prefer stored full name when admin is logged in
+  try {
+    const storedFullName = localStorage.getItem('ecomartFullName');
+    const storedRole = localStorage.getItem('ecomartRole');
+    if (storedRole === 'admin' && storedFullName) {
+      document.getElementById('usernameDisplay').textContent = `Hello, ${storedFullName}`;
+    } else {
+      document.getElementById('usernameDisplay').textContent = 'Hello Admin';
+    }
+  } catch (e) {
+    // ignore if localStorage isn't available
+  }
+
+  // Logout: clear stored identity
+  const logoutLink = document.getElementById('logoutLink');
+  if (logoutLink) {
+    logoutLink.addEventListener('click', function() {
+      localStorage.removeItem('ecomartUsername');
+      localStorage.removeItem('ecomartFullName');
+      localStorage.removeItem('ecomartRole');
+    });
+  }
+
+  // Set backend URL explicitly (port 3000)
+  const backendUrl = 'http://127.0.0.1:3000';
+
+  // Fetch products and users from backend
+  async function loadData() {
+    try {
+      // Fetch users
+      const userRes = await fetch(`${backendUrl}/admin/users`);
+      if (!userRes.ok) throw new Error("Failed to fetch users");
+      const users = await userRes.json();
+
+      // Populate user table
+      const userTable = document.getElementById('user-table').querySelector('tbody');
+      userTable.innerHTML = ""; 
+      users.forEach((u) => {
+        const row = document.createElement('tr');
+        const status = u.status || "Active";
+        let actionBtnHtml = '';
+        if (u.role === 'admin') {
+          actionBtnHtml = `<button class="action-btn" disabled>—</button>`;
+        } else {
+          actionBtnHtml = status === 'Blocked'
+            ? `<button class="action-btn block-btn" onclick="unblockUser('${u.userid}')">Unblock</button>`
+            : `<button class="action-btn block-btn" onclick="blockUser('${u.userid}')">Block</button>`;
         }
+
+        row.innerHTML = `
+          <td>${u.userid}</td>
+          <td>${u.email}</td>
+          <td>${u.role}</td>
+          <td>${status}</td>
+          <td>${actionBtnHtml}</td>
+        `;
+        userTable.appendChild(row);
       });
 
-      // SAMPLE DATA - can later come from backend or localStorage
-      const products = [
-        { title: "Headphones", seller: "Priya", category: "Electronics", price: "3200", status: "Approved" },
-        { title: "Calculus Textbook", seller: "Rahul", category: "Academic", price: "800", status: "Pending" },
-        { title: "Lab Coat", seller: "Amit", category: "Clothing", price: "350", status: "Approved" },
-      ];
+      // Fetch products
+      const productRes = await fetch(`${backendUrl}/admin/products`);
+      if (!productRes.ok) throw new Error("Failed to fetch products");
+      const products = await productRes.json();
 
-      const users = [
-        { username: "priya_s", email: "priya@student.mes.ac.in", role: "Seller", status: "Active" },
-        { username: "rahul_m", email: "rahul@student.mes.ac.in", role: "Seller", status: "Active" },
-        { username: "amit_k", email: "amit@student.mes.ac.in", role: "Buyer", status: "Active" },
-      ];
-
-      // Populate product table
       const productTable = document.getElementById('product-table').querySelector('tbody');
-      products.forEach((p, i) => {
+      productTable.innerHTML = "";
+      products.forEach((p) => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${p.title}</td>
-          <td>${p.seller}</td>
+          <td>${p.sellerName}</td>
           <td>${p.category}</td>
           <td>₹${p.price}</td>
           <td>${p.status}</td>
           <td>
             ${p.status === 'Pending' ? `
-              <button class="action-btn approve-btn" onclick="approveProduct(${i})">Approve</button>
-              <button class="action-btn reject-btn" onclick="rejectProduct(${i})">Reject</button>
+              <button class="action-btn approve-btn" onclick="approveProduct('${p.id}')">Approve</button>
+              <button class="action-btn reject-btn" onclick="rejectProduct('${p.id}')">Reject</button>
             ` : `
-              <button class="action-btn delete-btn" onclick="deleteProduct(${i})">Delete</button>
+              <button class="action-btn delete-btn" onclick="deleteProduct('${p.id}')">Delete</button>
             `}
           </td>
         `;
         productTable.appendChild(row);
       });
 
-      // Populate user table
-      const userTable = document.getElementById('user-table').querySelector('tbody');
-      users.forEach((u, i) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${u.username}</td>
-          <td>${u.email}</td>
-          <td>${u.role}</td>
-          <td>${u.status}</td>
-          <td><button class="action-btn block-btn" onclick="blockUser(${i})">Block</button></td>
-        `;
-        userTable.appendChild(row);
-      });
-
-      // Stats
+      // Update stats
       document.getElementById('total-users').textContent = users.length;
       document.getElementById('total-products').textContent = products.length;
       document.getElementById('pending-approvals').textContent = products.filter(p => p.status === 'Pending').length;
-    });
 
-    // Action Functions
-    function approveProduct(index) {
+    } catch (err) {
+      console.error(err);
+      alert("Unable to fetch data from server. Make sure your backend is running on port 3000.");
+    }
+  }
+
+  // Action Functions
+  window.approveProduct = async function(productId) {
+    try {
+      await fetch(`${backendUrl}/admin/products/${productId}/approve`, { method: "POST" });
       alert("Product Approved ✅");
+      loadData();
+    } catch {
+      alert("Action failed.");
     }
-    function rejectProduct(index) {
+  }
+
+  window.rejectProduct = async function(productId) {
+    try {
+      await fetch(`${backendUrl}/admin/products/${productId}/reject`, { method: "POST" });
       alert("Product Rejected ❌");
+      loadData();
+    } catch {
+      alert("Action failed.");
     }
-    function deleteProduct(index) {
+  }
+
+  window.deleteProduct = async function(productId) {
+    try {
+      await fetch(`${backendUrl}/admin/products/${productId}`, { method: "DELETE" });
       alert("Product Deleted 🗑️");
+      loadData();
+    } catch {
+      alert("Action failed.");
     }
-    function blockUser(index) {
-      alert("User Blocked 🚫");
+  }
+
+  window.blockUser = async function(userid) {
+    try {
+      const res = await fetch(`${backendUrl}/admin/users/${userid}/block`, { method: "POST" });
+      let body = null;
+      try { body = await res.json(); } catch (e) { /* ignore parse errors */ }
+      if (!res.ok) {
+        console.error('Block user failed', { userid, status: res.status, body });
+        alert(body && (body.error || body.message) ? (body.error || body.message) : 'Action failed.');
+        return;
+      }
+      alert("User blocked 🚫");
+      loadData();
+    } catch (err) {
+      console.error('Block user exception', err);
+      alert("Action failed.");
     }
-  </script>
+  }
+
+  window.unblockUser = async function(userid) {
+    try {
+      const res = await fetch(`${backendUrl}/admin/users/${userid}/unblock`, { method: "POST" });
+      let body = null;
+      try { body = await res.json(); } catch (e) { /* ignore parse errors */ }
+      if (!res.ok) {
+        console.error('Unblock user failed', { userid, status: res.status, body });
+        alert(body && (body.error || body.message) ? (body.error || body.message) : 'Action failed.');
+        return;
+      }
+      alert("User unblocked ✅");
+      loadData();
+    } catch (err) {
+      console.error('Unblock user exception', err);
+      alert("Action failed.");
+    }
+  }
+
+  loadData(); // initial load
+});
+</script>
+
+
 </body>
 </html>

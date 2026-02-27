@@ -136,38 +136,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Modal Logic ---
-    const policyModal = document.getElementById('policy-modal');
-    const acknowledgeCheckbox = document.getElementById('acknowledge-policy');
-    const proceedButton = document.getElementById('proceed-btn');
-    const mainPageContent = document.getElementById('main-page-content');
-
-    if (policyModal) {
-        policyModal.classList.remove('hidden');
-        mainPageContent.classList.add('hidden');
-
-        acknowledgeCheckbox.addEventListener('change', () => {
-            proceedButton.disabled = !acknowledgeCheckbox.checked;
-        });
-
-        proceedButton.addEventListener('click', () => {
-            if (acknowledgeCheckbox.checked) {
-                policyModal.classList.add('hidden');
-                mainPageContent.classList.remove('hidden');
-                window.scrollTo(0, 0);
-            }
-        });
-    }
-
-    // --- EcoMart Form Logic (Seller Only) ---
+    // Form Logic for both seller.html and sellerform.html
     const form = document.getElementById('product-form');
     if (form) {
         const categorySelect = document.getElementById('category-select');
         const itemTypeSelect = document.getElementById('item-type-select');
         
-        // REMOVED: transactionTypeRadios, priceLabel, and conditional field wrappers
-        // as they are no longer dynamic.
-
         const itemTypesByCategory = {
             electronics: ['Laptops', 'Phones', 'Calculators', 'Headphones', 'Chargers'],
             books: ['Textbooks', 'Novels', 'Lab Manuals', 'Lecture Notes'],
@@ -192,68 +166,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // REMOVED: The handleTransactionTypeChange function is no longer needed.
-
-        function handleFormSubmit(event) {
-            event.preventDefault();
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-
-            console.log("Form Submitted!", data);
-            alert('Form data has been logged to the console. Check it with F12!');
-            form.reset();
-            updateItemTypes();
-        }
-
+        // Set up category change handler
         categorySelect.addEventListener('change', updateItemTypes);
-        // REMOVED: Event listener for radio buttons.
-        form.addEventListener('submit', handleFormSubmit);
-
+        
         // Initial setup call for the form
         updateItemTypes();
     }
-     document.getElementById("add-product-btn").addEventListener("click", () => {
-    window.location.href = "sellerform.html"; // navigate to add product page
-  });
 });
-// Get references to form and seller product list
-const productForm = document.getElementById('product-form');
-const sellerProductList = document.getElementById('seller-product-list');
-
-productForm.addEventListener('submit', function(e) {
-    e.preventDefault(); // Prevent page reload
-
-    // Get form values
-    const category = document.getElementById('category-select').value;
-    const itemType = document.getElementById('item-type-select').value;
-    const title = document.getElementById('listing-title').value;
-    const description = document.getElementById('description').value;
-    const condition = document.getElementById('condition-field').value;
-    const price = document.getElementById('price-field').value;
-    const location = document.getElementById('location-select').value;
-    const photo = document.getElementById('photo-field').files[0];
-
-    // Create a product card
-    const productCard = document.createElement('div');
-    productCard.className = 'product-card';
-    
-    let imgSrc = photo ? URL.createObjectURL(photo) : 'https://via.placeholder.com/200x150';
-    
-    productCard.innerHTML = `
-        <img src="${imgSrc}" alt="Product Image">
-        <div class="product-info">
-            <h3 class="product-title">${title}</h3>
-            <p class="product-category">Category: ${category} / ${itemType}</p>
-            <p class="product-description">${description}</p>
-            <p class="product-condition">Condition: ${condition}</p>
-            <p class="product-price">₹${price}</p>
-            <p class="product-location">Location: ${location}</p>
-        </div>
-    `;
-
-    // Add to seller product list
-    sellerProductList.appendChild(productCard);
-
-    // Optionally reset the form
-    productForm.reset();
-});
+// Form submission is now handled in seller.html

@@ -135,23 +135,28 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             return;
         }
 
-        // Success
-        alert(data.message);
+    // Success: store userid and role in localStorage so pages know who's logged in
+    localStorage.setItem('ecomartUsername', data.userid);
+    localStorage.setItem('ecomartRole', data.role);
 
-        // Redirect based on role returned from backend
-        switch(data.role) {
-            case 'buyer':
-                window.location.href = "buyer.html";
-                break;
-            case 'seller':
-                window.location.href = "seller.html";
-                break;
-            case 'admin':
-                window.location.href = "admin.html";
-                break;
-            default:
-                alert("Unknown user role.");
-        }
+    // Optionally store display name if server sends it
+    if (data.name) localStorage.setItem('ecomartFullName', data.name);
+
+    // Inform user and redirect based on role
+    alert(data.message);
+    switch(data.role) {
+      case 'buyer':
+        window.location.href = "buyer.html";
+        break;
+      case 'seller':
+        window.location.href = "seller.html";
+        break;
+      case 'admin':
+        window.location.href = "admin.html";
+        break;
+      default:
+        alert("Unknown user role.");
+    }
 
     } catch (err) {
         console.error("Login error:", err);
